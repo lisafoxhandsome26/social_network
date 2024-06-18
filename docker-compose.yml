@@ -11,20 +11,23 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - ./backend/src/database/db/:/var/lib/postgresql/data
+      - ./backend/database/db/:/var/lib/postgresql/data
 
   backend:
     container_name: backend
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     stop_signal: SIGTERM
     restart: always
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/user_images:/src/user_images
-      - ./.env:/src/.env # Можно так делать прокидывать файл переменных окружения в контейнер через volume?
+      - ./backend/${DIR_IMAGES}:/src/${DIR_IMAGES}
+      - ./.env:/src/.env
+      - ./migrations:/src/migrations
+      - ./alembic.ini:/src/alembic.ini
+    entrypoint: sh -c "sleep 10 && alembic upgrade head && uvicorn --host 0.0.0.0 main:app"
     depends_on:
       - database
 
